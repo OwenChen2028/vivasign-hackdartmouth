@@ -1,4 +1,7 @@
-[![Video Demo](https://img.youtube.com/vi/pD90VZ25B0M/0.jpg)](https://www.youtube.com/watch?v=pD90VZ25B0M)
+## Video Demo
+[![Watch the video](https://img.youtube.com/vi/pD90VZ25B0M/maxresdefault.jpg)](https://www.youtube.com/watch?v=pD90VZ25B0M)
+
+## Team Info
 
 **Team Name:** Gesture Gurus
 
