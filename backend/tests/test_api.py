@@ -8,7 +8,7 @@ from settings import REFERENCE_MODE, Settings
 REFERENCE_SETTINGS = Settings(
     evaluation_mode=REFERENCE_MODE,
     gemini_api_key=None,
-    gemini_model="gemini-2.0-flash",
+    gemini_model="gemini-3.6-flash",
     database={},
 )
 TEST_IMAGE = "data:image/png;base64," + base64.b64encode(b"test image").decode()

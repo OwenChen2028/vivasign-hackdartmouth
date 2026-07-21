@@ -97,7 +97,7 @@ The backend reads configuration from `backend/.env`.
 | `VIVASIGN_EVALUATION_MODE` | Selects `reference` or `ai` evaluation | Automatically selected from available configuration |
 | `CORS_ORIGINS` | Comma-separated frontend origins allowed by the API | Local React development origins |
 | `GEMINI_API_KEY` | Google Gemini API key | None |
-| `GEMINI_MODEL` | Gemini model used for evaluation | `gemini-2.0-flash` |
+| `GEMINI_MODEL` | Gemini model used for evaluation | `gemini-3.6-flash` |
 | `DB_HOST` | PostgreSQL server hostname | None |
 | `DB_PORT` | PostgreSQL server port | `5432` |
 | `DB_NAME` | PostgreSQL database name | None |

@@ -59,7 +59,7 @@ class Settings:
         return cls(
             evaluation_mode=evaluation_mode,
             gemini_api_key=gemini_api_key,
-            gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+            gemini_model=os.getenv("GEMINI_MODEL", "gemini-3.6-flash"),
             database=database,
             cors_origins=cors_origins,
         )
