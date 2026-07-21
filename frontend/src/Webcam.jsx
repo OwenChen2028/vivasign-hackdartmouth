@@ -20,7 +20,7 @@ export default function Webcam() {
   const [currentSign, setCurrentSign] = useState(null);
   const camera = useCamera(videoRef);
 
-  async function takeScreenshot(frameNumber) {
+  function captureFrame(frameNumber) {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || !currentSign) {
@@ -34,17 +34,26 @@ export default function Webcam() {
       throw new Error('The browser could not prepare an image from the camera.');
     }
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
-    const evaluation = await evaluateFrame({
-      signName: currentSign.signName,
-      frameNumber,
-      imageBase64,
-    });
     return {
-      imageBase64,
-      text: evaluation.text,
-      evaluationMode: evaluation.mode,
+      frameNumber,
+      imageBase64: canvas.toDataURL('image/jpeg', 0.9),
     };
+  }
+
+  async function processCaptures(captures) {
+    const evaluations = await Promise.all(
+      captures.map(({ frameNumber, imageBase64 }) => evaluateFrame({
+        signName: currentSign.signName,
+        frameNumber,
+        imageBase64,
+      })),
+    );
+
+    return evaluations.map((evaluation) => ({
+      text: evaluation.text,
+      signName: currentSign.signName,
+      evaluationMode: evaluation.mode,
+    }));
   }
 
   const resetResults = useCallback(() => {
@@ -88,7 +97,8 @@ export default function Webcam() {
           >
             <PracticeCaptureButton
               currentSign={currentSign}
-              takeScreenshot={takeScreenshot}
+              captureFrame={captureFrame}
+              processCaptures={processCaptures}
               setCountdownText={setCountdownText}
               onComplete={({ capturedFrames, capturedFeedback }) => {
                 setFrames(capturedFrames);

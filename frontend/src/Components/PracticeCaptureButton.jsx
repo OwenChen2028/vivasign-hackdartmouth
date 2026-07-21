@@ -15,7 +15,8 @@ function wait(milliseconds, timers) {
 
 export default function PracticeCaptureButton({
   currentSign,
-  takeScreenshot,
+  captureFrame,
+  processCaptures,
   setCountdownText,
   onComplete,
   onError,
@@ -23,7 +24,7 @@ export default function PracticeCaptureButton({
   onRecordingChange,
   disabled = false,
 }) {
-  const [isRecording, setIsRecording] = useState(false);
+  const [phase, setPhase] = useState('idle');
   const timers = useRef(new Set());
   const mounted = useRef(true);
 
@@ -38,13 +39,12 @@ export default function PracticeCaptureButton({
   }, []);
 
   async function startCapture() {
-    if (!currentSign || isRecording || disabled) return;
+    if (!currentSign || phase !== 'idle' || disabled) return;
 
-    setIsRecording(true);
+    setPhase('capturing');
     onRecordingChange(true);
     onStart();
-    const capturedFrames = [];
-    const capturedFeedback = [];
+    const captures = [];
 
     try {
       for (let frameNumber = 1; frameNumber <= currentSign.entryCount; frameNumber += 1) {
@@ -55,18 +55,20 @@ export default function PracticeCaptureButton({
         }
 
         setCountdownText(`Capturing frame ${frameNumber}…`);
-        const result = await takeScreenshot(frameNumber);
-        capturedFrames.push(result.imageBase64);
-        capturedFeedback.push({
-          text: result.text,
-          signName: currentSign.signName,
-          evaluationMode: result.evaluationMode,
-        });
+        captures.push(captureFrame(frameNumber));
       }
 
       if (mounted.current) {
-        setCountdownText('');
-        onComplete({ capturedFrames, capturedFeedback });
+        setPhase('processing');
+        setCountdownText('Analyzing captured frames…');
+        const capturedFeedback = await processCaptures(captures);
+        if (mounted.current) {
+          setCountdownText('');
+          onComplete({
+            capturedFrames: captures.map(({ imageBase64 }) => imageBase64),
+            capturedFeedback,
+          });
+        }
       }
     } catch (captureError) {
       if (mounted.current) {
@@ -75,7 +77,7 @@ export default function PracticeCaptureButton({
       }
     } finally {
       if (mounted.current) {
-        setIsRecording(false);
+        setPhase('idle');
         onRecordingChange(false);
       }
     }
@@ -86,9 +88,11 @@ export default function PracticeCaptureButton({
       type="button"
       onClick={startCapture}
       className="button"
-      disabled={!currentSign || isRecording || disabled}
+      disabled={!currentSign || phase !== 'idle' || disabled}
     >
-      {isRecording ? 'Recording…' : 'Start countdown'}
+      {phase === 'capturing' && 'Capturing…'}
+      {phase === 'processing' && 'Analyzing…'}
+      {phase === 'idle' && 'Start countdown'}
     </button>
   );
 }
