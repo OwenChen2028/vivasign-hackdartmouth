@@ -4,6 +4,17 @@ VivaSign is a webcam-based American Sign Language practice app. It guides learne
 through the key positions of a sign, captures each position, and presents feedback
 alongside written instructions and video demonstrations.
 
+## Demo and HackDartmouth X
+
+VivaSign was created by **Gesture Gurus** for HackDartmouth X.
+
+[![Watch the VivaSign video demo](https://img.youtube.com/vi/pD90VZ25B0M/maxresdefault.jpg)](https://www.youtube.com/watch?v=pD90VZ25B0M)
+
+- [Watch the video demo](https://www.youtube.com/watch?v=pD90VZ25B0M)
+- [View the Devpost project](https://devpost.com/software/vivasign)
+
+**Team:** Owen Chen, Axel O’Brien, Jaime Graft, and Joao De Arujo Junior
+
 ## Features
 
 - Guided webcam capture with a countdown for each keyframe
@@ -124,12 +135,3 @@ before accepting public submissions.
 
 VivaSign is a learning aid, not a replacement for instruction from a qualified or
 fluent ASL educator. Automated feedback may be incomplete or inaccurate.
-
-## Project background
-
-VivaSign was created by Gesture Gurus for HackDartmouth X.
-
-**Team:** Owen Chen, Axel O’Brien, Jaime Graft, and Joao De Arujo Junior
-
-- [Devpost project](https://devpost.com/software/vivasign)
-- [Video demo](https://www.youtube.com/watch?v=pD90VZ25B0M)
