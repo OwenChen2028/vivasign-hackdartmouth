@@ -18,7 +18,7 @@ VivaSign was created by **Gesture Gurus** for HackDartmouth X.
 
 ## Features
 
-- Guided webcam capture with a countdown for each keyframe
+- Guided webcam capture with uninterrupted countdowns for each keyframe
 - Practice material for seven common ASL signs
 - Written instructions and video demonstrations available before practice
 - Reference-based practice that works without external services
@@ -29,10 +29,10 @@ VivaSign was created by **Gesture Gurus** for HackDartmouth X.
 
 1. The learner selects a sign.
 2. VivaSign displays a countdown for each key position in the sign.
-3. The browser captures a webcam image at the end of each countdown.
-4. The app presents each captured frame for review.
-5. Written guidance and a video demonstration are available for comparison; AI mode
-   also returns automated feedback.
+3. The browser captures every keyframe locally without waiting for network requests.
+4. After the final capture, AI mode submits the frames for feedback in parallel.
+5. The app presents the captured frames alongside written guidance, a video
+   demonstration, and any configured AI feedback.
 
 VivaSign supports two evaluation modes:
 
@@ -48,7 +48,7 @@ VivaSign supports two evaluation modes:
 
 - **Frontend:** React, React Router, and the browser MediaDevices API
 - **Backend:** Python, Flask, and Gunicorn
-- **Optional services:** PostgreSQL and Google Gemini
+- **AI mode:** PostgreSQL for sign reference data and Google Gemini for image feedback
 
 ## Local development
 
@@ -57,6 +57,7 @@ VivaSign supports two evaluation modes:
 - Python 3.10 or later
 - Node.js 20 or later
 - A browser with webcam support
+- PostgreSQL 14 or later and a Gemini API key for AI mode only
 
 ### Start the API
 
@@ -90,6 +91,20 @@ npm start
 The development site is served at <http://localhost:3000>. Browsers treat localhost
 as a secure context, allowing webcam access after permission is granted.
 
+### Enable AI feedback
+
+Reference mode does not require PostgreSQL or Gemini. To enable AI feedback, create a
+PostgreSQL database and load the included sign reference data:
+
+```bash
+createdb vivasign
+psql --dbname vivasign --file backend/db_setup.txt
+```
+
+Then set `VIVASIGN_EVALUATION_MODE=ai`, add a Gemini API key, and provide the database
+connection values in `backend/.env`. Restart the API after changing its environment.
+The `/health` response should then report `"mode":"ai"`.
+
 ## Configuration
 
 The backend reads configuration from `backend/.env`.
@@ -119,7 +134,7 @@ The frontend reads `REACT_APP_API_BASE_URL` from `frontend/.env`. It defaults to
 | `GET` | `/health` | Reports API status and evaluation mode |
 | `GET` | `/signs` | Lists available signs and keyframe counts |
 | `POST` | `/evaluate` | Evaluates one captured keyframe |
-| `GET` | `/explain` | Returns written guidance for a sign |
+| `GET` | `/explain` | Formats written guidance directly from stored sign data |
 | `GET` | `/video` | Returns the demonstration video URL for a sign |
 | `GET` | `/media/<filename>` | Serves bundled videos in reference mode |
 
@@ -134,9 +149,11 @@ cd frontend && npm run build
 ## Privacy and limitations
 
 Reference mode processes captures within the local API workflow and does not send
-them to Gemini. AI evaluation mode uploads captured frames to Google Gemini for
-analysis. Deployments should provide an appropriate privacy notice and access controls
-before accepting public submissions.
+them to Gemini. AI evaluation mode uploads captured frames to Google Gemini only after
+the capture sequence is complete. Captures are not stored in PostgreSQL, and VivaSign
+requests deletion of temporary Gemini uploads after evaluation. Deployments should
+provide an appropriate privacy notice and access controls before accepting public
+submissions.
 
 VivaSign is a learning aid, not a replacement for instruction from a qualified or
 fluent ASL educator. Automated feedback may be incomplete or inaccurate.
