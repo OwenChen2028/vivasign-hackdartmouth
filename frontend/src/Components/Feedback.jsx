@@ -1,43 +1,39 @@
-import { useEffect, useState } from 'react';
-import { getHints } from '../api';
-import HintButton from './HintButton';
+import FormattedText from './FormattedText';
 
-export default function Feedback({ frames, feedback }) {
-  const [hint, setHint] = useState(null);
-  const [hintError, setHintError] = useState('');
-  const signName = feedback[0]?.signName;
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!signName) return undefined;
-
-    setHint(null);
-    setHintError('');
-    getHints(signName)
-      .then((result) => {
-        if (!cancelled) setHint(result);
-      })
-      .catch((error) => {
-        if (!cancelled) setHintError(error.message);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [signName]);
+export default function Feedback({ frames, feedback, signName, onReviewReference }) {
+  const isReferenceMode = feedback.some((item) => item.evaluationMode === 'reference');
 
   return (
     <section className="feedback" aria-labelledby="feedback-heading">
-      <h2 id="feedback-heading">Your feedback</h2>
+      <h2 id="feedback-heading">Practice results</h2>
+
+      {isReferenceMode && (
+        <div className="feedback__notice">
+          <div>
+            <h3>Images captured</h3>
+            <p>
+              VivaSign does not analyze images in reference mode. Compare your captured
+              positions with the example video.
+            </p>
+          </div>
+          <button type="button" className="button" onClick={onReviewReference}>
+            View example video
+          </button>
+        </div>
+      )}
+
       {frames.map((frame, index) => (
         <article className="feedback__frame" key={`${signName}-${index}`}>
-          <h3>Frame {index + 1}</h3>
-          <img src={frame} alt={`Your captured ${signName} frame ${index + 1}`} />
-          <p>{feedback[index]?.text || 'Feedback unavailable.'}</p>
+          <h3>Captured frame {index + 1}</h3>
+          <img src={frame} alt={`Captured ${signName} frame ${index + 1}`} />
+          {!isReferenceMode && (
+            <FormattedText
+              text={feedback[index]?.text || 'Feedback unavailable.'}
+              className="formatted-text feedback__copy"
+            />
+          )}
         </article>
       ))}
-      {hintError && <p className="error-message">Could not load the reference: {hintError}</p>}
-      {hint && <HintButton text={hint.text} video={hint.video} signName={signName} />}
     </section>
   );
 }

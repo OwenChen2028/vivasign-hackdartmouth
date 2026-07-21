@@ -1,8 +1,9 @@
 # VivaSign
 
 VivaSign is a webcam-based American Sign Language practice app. It guides learners
-through the key positions of a sign, captures each position, and presents feedback
-alongside written instructions and video demonstrations.
+through the key positions of a sign, captures each position, and presents the images
+alongside written instructions and video demonstrations. Optional AI mode adds
+automated feedback.
 
 ## Demo and HackDartmouth X
 
@@ -19,8 +20,8 @@ VivaSign was created by **Gesture Gurus** for HackDartmouth X.
 
 - Guided webcam capture with a countdown for each keyframe
 - Practice material for seven common ASL signs
-- Written instructions and locally hosted video demonstrations
-- Reference-based feedback that works without external services
+- Written instructions and video demonstrations available before practice
+- Reference-based practice that works without external services
 - Optional visual assessment powered by Google Gemini
 - Responsive, accessible React interface
 
@@ -29,8 +30,9 @@ VivaSign was created by **Gesture Gurus** for HackDartmouth X.
 1. The learner selects a sign.
 2. VivaSign displays a countdown for each key position in the sign.
 3. The browser captures a webcam image at the end of each countdown.
-4. The API returns feedback for each captured frame.
-5. Written guidance and a video demonstration are available for comparison.
+4. The app presents each captured frame for review.
+5. Written guidance and a video demonstration are available for comparison; AI mode
+   also returns automated feedback.
 
 VivaSign supports two evaluation modes:
 
@@ -69,7 +71,7 @@ The health endpoint at <http://localhost:5000/health> reports the active evaluat
 mode. With the example configuration, the response is:
 
 ```json
-{"mode":"local","status":"ok"}
+{"mode":"reference","status":"ok"}
 ```
 
 ### Start the frontend
@@ -92,7 +94,8 @@ The backend reads configuration from `backend/.env`.
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `VIVASIGN_LOCAL_MODE` | Enables the bundled reference mode | Automatically enabled when cloud configuration is absent |
+| `VIVASIGN_EVALUATION_MODE` | Selects `reference` or `ai` evaluation | Automatically selected from available configuration |
+| `CORS_ORIGINS` | Comma-separated frontend origins allowed by the API | Local React development origins |
 | `GEMINI_API_KEY` | Google Gemini API key | None |
 | `GEMINI_MODEL` | Gemini model used for evaluation | `gemini-2.0-flash` |
 | `DB_HOST` | PostgreSQL server hostname | None |
@@ -101,7 +104,7 @@ The backend reads configuration from `backend/.env`.
 | `DB_USER` | PostgreSQL username | None |
 | `DB_PASSWORD` | PostgreSQL password | None |
 
-Set `VIVASIGN_LOCAL_MODE=false` and provide all Gemini and PostgreSQL values to enable
+Set `VIVASIGN_EVALUATION_MODE=ai` and provide all Gemini and PostgreSQL values to enable
 AI evaluation.
 
 The frontend reads `REACT_APP_API_BASE_URL` from `frontend/.env`. It defaults to

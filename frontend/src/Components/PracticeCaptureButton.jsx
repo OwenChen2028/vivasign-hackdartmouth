@@ -13,7 +13,7 @@ function wait(milliseconds, timers) {
   });
 }
 
-export default function ButtonScreenshot({
+export default function PracticeCaptureButton({
   currentSign,
   takeScreenshot,
   setCountdownText,
@@ -21,6 +21,7 @@ export default function ButtonScreenshot({
   onError,
   onStart,
   onRecordingChange,
+  disabled = false,
 }) {
   const [isRecording, setIsRecording] = useState(false);
   const timers = useRef(new Set());
@@ -36,8 +37,8 @@ export default function ButtonScreenshot({
     };
   }, []);
 
-  async function startRecording() {
-    if (!currentSign || isRecording) return;
+  async function startCapture() {
+    if (!currentSign || isRecording || disabled) return;
 
     setIsRecording(true);
     onRecordingChange(true);
@@ -56,17 +57,21 @@ export default function ButtonScreenshot({
         setCountdownText(`Capturing frame ${frameNumber}…`);
         const result = await takeScreenshot(frameNumber);
         capturedFrames.push(result.imageBase64);
-        capturedFeedback.push({ text: result.text, signName: currentSign.signName });
+        capturedFeedback.push({
+          text: result.text,
+          signName: currentSign.signName,
+          evaluationMode: result.evaluationMode,
+        });
       }
 
       if (mounted.current) {
         setCountdownText('');
         onComplete({ capturedFrames, capturedFeedback });
       }
-    } catch (error) {
+    } catch (captureError) {
       if (mounted.current) {
         setCountdownText('');
-        onError(error);
+        onError(captureError);
       }
     } finally {
       if (mounted.current) {
@@ -79,9 +84,9 @@ export default function ButtonScreenshot({
   return (
     <button
       type="button"
-      onClick={startRecording}
+      onClick={startCapture}
       className="button"
-      disabled={!currentSign || isRecording}
+      disabled={!currentSign || isRecording || disabled}
     >
       {isRecording ? 'Recording…' : 'Start countdown'}
     </button>

@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from catalog import SIGN_DATA, VIDEO_FILES
 
 
-class LocalSignRepository:
+class ReferenceSignRepository:
     def list_signs(self):
         return [
             {"signName": name, "entryCount": len(frames)}

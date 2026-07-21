@@ -8,33 +8,39 @@ from werkzeug.exceptions import HTTPException
 
 from catalog import SIGN_EXAMPLES_DIRECTORY
 from settings import Settings
-from repositories import LocalSignRepository, PostgresSignRepository
-from services import GeminiEvaluationService, LocalEvaluationService
+from repositories import PostgresSignRepository, ReferenceSignRepository
+from services import GeminiEvaluationService, ReferenceEvaluationService
 
 
 DATA_URL_PATTERN = re.compile(r"^data:(image/(?:png|jpeg));base64,(.+)$", re.DOTALL)
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
+MAX_REQUEST_BYTES = 12 * 1024 * 1024
 
 
 def create_app(settings=None):
     settings = settings or Settings.from_environment()
     app = Flask(__name__)
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    app.config["MAX_CONTENT_LENGTH"] = MAX_REQUEST_BYTES
+    CORS(
+        app,
+        resources={r"/*": {"origins": settings.cors_origins}},
+        expose_headers=["X-VivaSign-Evaluation-Mode"],
+    )
 
     repository = (
-        LocalSignRepository()
-        if settings.local_mode
+        ReferenceSignRepository()
+        if settings.uses_reference_data
         else PostgresSignRepository(settings.database)
     )
     evaluation_service = (
-        LocalEvaluationService()
-        if settings.local_mode
+        ReferenceEvaluationService()
+        if settings.uses_reference_data
         else GeminiEvaluationService(settings.gemini_api_key, settings.gemini_model)
     )
 
     @app.get("/health")
     def health():
-        return jsonify(status="ok", mode="local" if settings.local_mode else "cloud")
+        return jsonify(status="ok", mode=settings.evaluation_mode)
 
     @app.get("/signs")
     def get_signs():
@@ -66,7 +72,10 @@ def create_app(settings=None):
         except Exception as error:
             app.logger.exception("Evaluation failed: %s", error)
             return _error("Image evaluation failed.", 502)
-        return feedback, 200, {"Content-Type": "text/plain; charset=utf-8"}
+        return feedback, 200, {
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-VivaSign-Evaluation-Mode": settings.evaluation_mode,
+        }
 
     @app.get("/explain")
     def generate_instruction():
@@ -90,14 +99,14 @@ def create_app(settings=None):
         video = repository.get_video(sign_name)
         if not video:
             return _error(f"No video found for sign '{sign_name}'.", 404)
-        if settings.local_mode:
-            return url_for("get_local_video", filename=video, _external=True)
+        if settings.uses_reference_data:
+            return url_for("get_reference_video", filename=video, _external=True)
         return video
 
     @app.get("/media/<path:filename>")
-    def get_local_video(filename):
-        if not settings.local_mode:
-            return _error("Local media is disabled.", 404)
+    def get_reference_video(filename):
+        if not settings.uses_reference_data:
+            return _error("Bundled reference media is disabled.", 404)
         return send_from_directory(SIGN_EXAMPLES_DIRECTORY, filename)
 
     @app.errorhandler(Exception)

@@ -2,42 +2,43 @@ import base64
 import unittest
 
 from api import create_app
-from settings import Settings
+from settings import REFERENCE_MODE, Settings
 
 
-LOCAL_SETTINGS = Settings(
+REFERENCE_SETTINGS = Settings(
+    evaluation_mode=REFERENCE_MODE,
     gemini_api_key=None,
     gemini_model="gemini-2.0-flash",
     database={},
-    local_mode=True,
 )
 TEST_IMAGE = "data:image/png;base64," + base64.b64encode(b"test image").decode()
 
 
-class LocalApiTest(unittest.TestCase):
+class ReferenceApiTest(unittest.TestCase):
     def setUp(self):
-        app = create_app(LOCAL_SETTINGS)
+        app = create_app(REFERENCE_SETTINGS)
         app.config.update(TESTING=True)
         self.client = app.test_client()
 
-    def test_health_reports_local_mode(self):
+    def test_health_reports_reference_mode(self):
         response = self.client.get("/health")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), {"mode": "local", "status": "ok"})
+        self.assertEqual(response.get_json(), {"mode": "reference", "status": "ok"})
 
-    def test_signs_come_from_local_catalog(self):
+    def test_signs_come_from_reference_catalog(self):
         response = self.client.get("/signs")
         signs = response.get_json()["signs"]
         self.assertEqual(response.status_code, 200)
         self.assertIn({"entryCount": 2, "signName": "Hello"}, signs)
 
-    def test_evaluate_validates_and_returns_local_feedback(self):
+    def test_evaluate_returns_reference_mode_metadata(self):
         response = self.client.post(
             "/evaluate",
             data={"signName": "Hello", "frameNumber": "1", "imageBase64": TEST_IMAGE},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertIn("reference mode", response.get_data(as_text=True))
+        self.assertEqual(response.get_data(as_text=True), "Frame 1 of Hello captured.")
+        self.assertEqual(response.headers["X-VivaSign-Evaluation-Mode"], "reference")
 
     def test_evaluate_rejects_an_unknown_frame(self):
         response = self.client.post(

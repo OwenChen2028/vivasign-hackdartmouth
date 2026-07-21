@@ -1,5 +1,5 @@
 .button,
-.hide-hints {
+.reference__toggle {
   border: 0;
   border-radius: 0.5rem;
   padding: 0.6rem 0.85rem;
@@ -9,20 +9,26 @@
   font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: 0;
 }
 
 .button:hover:not(:disabled),
-.hide-hints:hover {
+.reference__toggle:hover:not(:disabled) {
   background: #cf7bd9;
 }
 
 .button:focus-visible,
-.hide-hints:focus-visible {
+.reference__toggle:focus-visible {
   outline: 3px solid white;
   outline-offset: 3px;
 }
 
-.button:disabled {
+.button:disabled,
+.reference__toggle:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }

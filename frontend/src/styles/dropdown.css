@@ -1,7 +1,9 @@
 .sign-picker {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.6rem;
+  width: 100%;
   font-weight: 700;
 }
 
@@ -13,6 +15,7 @@
   color: white;
   font: inherit;
   font-size: 1.05rem;
+  min-width: 11rem;
 }
 
 .control-error {

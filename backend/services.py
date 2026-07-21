@@ -1,5 +1,9 @@
+import logging
 import os
 import tempfile
+
+
+logger = logging.getLogger(__name__)
 
 
 def build_instruction(sign_name, frames):
@@ -9,27 +13,25 @@ def build_instruction(sign_name, frames):
             f"Step {index}: {frame['handshape']} {frame['location']} "
             f"{frame['orientation']} {frame['nms']}"
         )
-    return " ".join(steps)
+    return "\n\n".join(steps)
 
 
-class LocalEvaluationService:
+class ReferenceEvaluationService:
     def evaluate(self, sign_name, frame_number, frame, _image_data, _mime_type):
-        return (
-            f"Frame {frame_number} was captured for {sign_name}. Compare the captured pose with "
-            f"this reference: {frame['handshape']} {frame['location']} {frame['orientation']} "
-            f"{frame['nms']} This installation is running in reference mode, which provides "
-            "practice guidance without visually scoring the image."
-        )
+        return f"Frame {frame_number} of {sign_name} captured."
 
     def explain(self, sign_name, frames):
         return build_instruction(sign_name, frames)
 
 
 class GeminiEvaluationService:
-    def __init__(self, api_key, model):
-        from google import genai
+    def __init__(self, api_key, model, client=None):
+        if client is None:
+            from google import genai
 
-        self.client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key=api_key)
+
+        self.client = client
         self.model = model
 
     def evaluate(self, sign_name, frame_number, frame, image_data, mime_type):
@@ -50,13 +52,13 @@ class GeminiEvaluationService:
             if uploaded_file:
                 try:
                     self.client.files.delete(name=uploaded_file.name)
-                except Exception:
-                    pass
+                except Exception as error:
+                    logger.warning("Could not delete uploaded Gemini file: %s", error)
             if temporary_path:
                 try:
                     os.unlink(temporary_path)
                 except FileNotFoundError:
-                    pass
+                    logger.debug("Temporary evaluation image was already removed.")
 
     def explain(self, sign_name, frames):
         prompt = (
