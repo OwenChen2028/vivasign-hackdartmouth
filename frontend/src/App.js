@@ -1,9 +1,6 @@
-import React from 'react';
-import { Link, BrowserRouter, Routes, Route } from 'react-router';
+import { BrowserRouter, Route, Routes } from 'react-router';
 import Webcam from './Webcam';
-import './App.css'; // Assuming you have some basic styles
-import SelectSign from './Components/SelectSign';
-import WelcomeScreen from './WelcomeScreen';
+import './App.css';
 import Navbar from './Components/Navbar';
 import Home from './Home';
 
@@ -16,7 +13,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/webcam" element={<Webcam />} />
-            {/* <SelectSign /> */}
+            <Route path="*" element={<Home />} />
           </Routes>
         </main>
       </div>

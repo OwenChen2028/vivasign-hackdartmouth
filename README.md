@@ -1,46 +1,135 @@
-## Devpost Link
-https://devpost.com/software/vivasign
+# VivaSign
 
-## Video Demo
-[![Watch the video](https://img.youtube.com/vi/pD90VZ25B0M/maxresdefault.jpg)](https://www.youtube.com/watch?v=pD90VZ25B0M)
+VivaSign is a webcam-based American Sign Language practice app. It guides learners
+through the key positions of a sign, captures each position, and presents feedback
+alongside written instructions and video demonstrations.
 
-## Team Info
+## Features
 
-**Team Name:** Gesture Gurus
+- Guided webcam capture with a countdown for each keyframe
+- Practice material for seven common ASL signs
+- Written instructions and locally hosted video demonstrations
+- Reference-based feedback that works without external services
+- Optional visual assessment powered by Google Gemini
+- Responsive, accessible React interface
 
-**Team Members:** Owen Chen, Axel O’Brien, Jaime Graft, Joao De Arujo Junior
+## How it works
 
-## Problem Statement & Inspiration
-Existing sign language learning apps fall short because they lack a critical element: feedback. While many provide instructions and examples, they rarely evaluate a user's actual signing attempts. Some don’t even encourage physical practice, leading users to simply memorize signs rather than building the muscle memory essential for real fluency.
+1. The learner selects a sign.
+2. VivaSign displays a countdown for each key position in the sign.
+3. The browser captures a webcam image at the end of each countdown.
+4. The API returns feedback for each captured frame.
+5. Written guidance and a video demonstration are available for comparison.
 
-Without feedback, crucial errors in hand shape, movement, orientation, location, and facial expression go unchecked. Learners are left guessing, often reinforcing bad habits instead of improving. This challenge is especially severe where in-person instruction or access to fluent signers is limited, restricting learning opportunities for countless people around the world.
+VivaSign supports two evaluation modes:
 
-Generic, one-size-fits-all content simply doesn’t work for mastering a complex, visual language like sign language. To build confidence and true fluency, learners need to know if they’re signing correctly—but current tools fail to provide that.
+- **Reference mode** uses the bundled sign catalog and demonstration videos. It
+  verifies the complete capture and feedback workflow, but does not visually score
+  captured images.
+- **AI evaluation mode** compares captured frames with sign reference data using
+  Google Gemini. This mode requires Gemini and PostgreSQL configuration.
 
-Our project directly addresses this gap by creating a system that offers the specific, actionable feedback learners need to truly improve and succeed in their learning journey.
+## Technology
 
-## Project Description (What it does)
-We give users the ability to practice their signs. We generate feedback that details what they’re doing well and how they can improve by sending screenshots of their gestures to Google Gemini for analysis.
+- **Frontend:** React, React Router, and the browser MediaDevices API
+- **Backend:** Python, Flask, and Gunicorn
+- **Optional services:** PostgreSQL and Google Gemini
 
-## Software Details (How we built it)
-Frontend: Our user interface is built with React.js, providing an interactive experience where users capture and submit a sequence of keyframe images representing their attempt at a specific sign.
+## Local development
 
-Backend: A Python Flask API (hosted on Render) is responsible for receiving the user’s images from the frontend, querying our PostgreSQL database (hosted on Aiven) for detailed reference data on the corresponding sign (including descriptions of the correct hand shape, location, palm orientation, and facial expression for each keyframe), and communicating with Gemini.
+### Requirements
 
-AI Integration: The data received by the backend is sent to Gemini for analysis. We leverage its powerful multimodal capabilities to perform a comprehensive evaluation of the user’s attempt at signing, comparing the user's keyframe images against the information in our database. Gemini then generates personalized feedback based on this comparison for each frame. This feedback is relayed to the user through the frontend
+- Python 3.10 or later
+- Node.js 20 or later
+- A browser with webcam support
 
-## Challenges we ran into
-Finding a method of evaluating gestures and generating feedback to the user was difficult. Special purpose models often were unable to provide detailed feedback, whereas LLMs weren't able to provide consistent, reliable evaluation.
+### Start the API
 
-We found Google Gemini to be the best (but still imperfect) available solution for this sort of task. We managed to mitigate the issues that came up with Gemini by experimenting with specific instructions (such as finding the right balance between critical and constructive for our feedback) and feeding it different kinds of data (it worked best when evaluating images against textual descriptions provided by a reliable source—an actual ASL signer from our team, Sky De Araujo; this grounded its responses and greatly reduced hallucinations).
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+flask --app api run --port 5000
+```
 
-We ran into some issues in the front end when setting up the live feed from the user's webcam, displaying countdowns with an overlay for accessibility and clarity, and making requests to the API, but we ended up resolving these issues eventually.
+The health endpoint at <http://localhost:5000/health> reports the active evaluation
+mode. With the example configuration, the response is:
 
-## Accomplishments that we're proud of
-We’ve built a pleasant looking website that serves as a helpful tool for practicing ASL. With access to more data, and time for proper validation testing, we can expand the usefulness of our application in a straightforward manner.
+```json
+{"mode":"local","status":"ok"}
+```
 
-## What we learned
-We learned a lot about webcam integration, react state changes and interactivity. We developed our styling skills, and our ability to work in parallel on different tasks without inciting breaking merge conflicts. We learned how to develop an API that can query databases, send requests to Gemini, and handle cross-origin resource requests.
+### Start the frontend
 
-## What's next for VivaSign
-We're working on expanding our database of signs (sourced from human signers for maximal data reliability), and to extend our demo into a real learning platform, with user authentication, progress tracking, and a gamified system that incentivizes learning. We’re also trying to make it possible to practice several popular sign languages from around the world, not just ASL, as well supporting translation into languages besides English. For now, we rely on existing browser translation solutions (e.g. Google Translate's Chrome extension) to provide accessibility across languages.
+In a second terminal:
+
+```bash
+cd frontend
+npm ci
+cp .env.example .env
+npm start
+```
+
+The development site is served at <http://localhost:3000>. Browsers treat localhost
+as a secure context, allowing webcam access after permission is granted.
+
+## Configuration
+
+The backend reads configuration from `backend/.env`.
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `VIVASIGN_LOCAL_MODE` | Enables the bundled reference mode | Automatically enabled when cloud configuration is absent |
+| `GEMINI_API_KEY` | Google Gemini API key | None |
+| `GEMINI_MODEL` | Gemini model used for evaluation | `gemini-2.0-flash` |
+| `DB_HOST` | PostgreSQL server hostname | None |
+| `DB_PORT` | PostgreSQL server port | `5432` |
+| `DB_NAME` | PostgreSQL database name | None |
+| `DB_USER` | PostgreSQL username | None |
+| `DB_PASSWORD` | PostgreSQL password | None |
+
+Set `VIVASIGN_LOCAL_MODE=false` and provide all Gemini and PostgreSQL values to enable
+AI evaluation.
+
+The frontend reads `REACT_APP_API_BASE_URL` from `frontend/.env`. It defaults to
+`http://localhost:5000` when the variable is not defined.
+
+## API
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Reports API status and evaluation mode |
+| `GET` | `/signs` | Lists available signs and keyframe counts |
+| `POST` | `/evaluate` | Evaluates one captured keyframe |
+| `GET` | `/explain` | Returns written guidance for a sign |
+| `GET` | `/video` | Returns the demonstration video URL for a sign |
+| `GET` | `/media/<filename>` | Serves bundled videos in reference mode |
+
+## Verification
+
+```bash
+cd backend && python -m unittest discover -s tests
+cd frontend && npm test -- --watchAll=false
+cd frontend && npm run build
+```
+
+## Privacy and limitations
+
+Reference mode processes captures within the local API workflow and does not send
+them to Gemini. AI evaluation mode uploads captured frames to Google Gemini for
+analysis. Deployments should provide an appropriate privacy notice and access controls
+before accepting public submissions.
+
+VivaSign is a learning aid, not a replacement for instruction from a qualified or
+fluent ASL educator. Automated feedback may be incomplete or inaccurate.
+
+## Project background
+
+VivaSign was created by Gesture Gurus for HackDartmouth X.
+
+**Team:** Owen Chen, Axel O’Brien, Jaime Graft, and Joao De Arujo Junior
+
+- [Devpost project](https://devpost.com/software/vivasign)
+- [Video demo](https://www.youtube.com/watch?v=pD90VZ25B0M)

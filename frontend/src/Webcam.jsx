@@ -1,255 +1,146 @@
-import { useState, useEffect, useRef } from 'react';
-// import axios from 'axios';
-import ButtonScreenshot from "./Components/ButtonScreenshot"
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { evaluateFrame } from './api';
+import ButtonScreenshot from './Components/ButtonScreenshot';
 import Feedback from './Components/Feedback';
 import SelectSign from './Components/SelectSign';
-import './styles/webcam.css'
+import './styles/webcam.css';
 
 export default function Webcam() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  // const photoRef = useRef(null);
-  const [camStream, setCamStream] = useState();
-  const [hasPermission, setHasPermission] = useState(null);
-  const [error, setError] = useState(null);
+  const [cameraStatus, setCameraStatus] = useState('requesting');
+  const [cameraError, setCameraError] = useState('');
+  const [activityError, setActivityError] = useState('');
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [feedback, setFeedback] = useState([]);
   const [frames, setFrames] = useState([]);
-  const [countDownText, setCountDownText] = useState();
-  const [currentSign, setCurrentSign] = useState({
-    entryCount: 1,
-    signName: null
-  })
+  const [isRecording, setIsRecording] = useState(false);
+  const [countdownText, setCountdownText] = useState('');
+  const [currentSign, setCurrentSign] = useState(null);
 
   useEffect(() => {
-    // Function to initialize and access the webcam
-    const startWebcam = async () => {
+    let stream;
+    let cancelled = false;
+
+    async function startWebcam() {
       try {
-        console.log("Attempting to access webcam...");
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: true,
-          audio: false
-        });
-            console.log("Webcam access granted, setting up video stream");
-            console.log(videoRef);
-            setHasPermission(true);
-            setCamStream(stream);
-            console.log(stream);
-      } catch (err) {
-        console.error("Error accessing webcam:", err);
-        setError(err.message);
-        setHasPermission(false);
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        videoRef.current.srcObject = stream;
+        setCameraStatus('ready');
+      } catch (error) {
+        if (!cancelled) {
+          setCameraError(error.message || 'Please allow camera access to use VivaSign.');
+          setCameraStatus('denied');
+        }
       }
-    };
+    }
 
-    startWebcam();
+    if (navigator.mediaDevices?.getUserMedia) {
+      startWebcam();
+    } else {
+      setCameraError('This browser does not support camera access.');
+      setCameraStatus('denied');
+    }
 
-    // Cleanup function to stop all tracks when component unmounts
     return () => {
-      console.log("Cleaning up webcam resources");
-      if (videoRef && videoRef.srcObject) {
-        videoRef.srcObject.getTracks().forEach(track => track.stop());
-      }
+      cancelled = true;
+      stream?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
-  //MDM docs
-  // function clearPhoto() {
-  //   const context = canvas.getContext("2d");
-  //   context.fillStyle = "#AAA";
-  //   context.fillRect(0, 0, canvas.width, canvas.height);
-  
-  //   const data = canvas.toDataURL("image/png");
-  //   photo.setAttribute("src", data);
-  // }
-
-  async function takeScreenshot() {
-    if (canvasRef.current === null) return
-    
-    const context = canvasRef.current.getContext("2d");
-    // if (width && height) {
-      // canvasRef.current.width = width;
-      // canvasRef.current.height = height;
-    context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-  
-    const data = canvasRef.current.toDataURL("image/png");
-    // console.log(data)
-    // photoRef.current.setAttribute("src", data);
-    // } else {
-    //   clearPhoto();
-    // }
-
-    //sending photo URI to backend
-
-    console.log(currentSign)
-    const formdata = new FormData();
-    formdata.append("signName", currentSign.signName); 
-    formdata.append("frameNumber", currentSign.entryCount);
-    formdata.append("imageBase64", data);
-
-    const requestOptions = {
-    method: "POST",
-    body: formdata,
-    redirect: "follow"
-    };
-
-    try {
-
-      const response = await fetch("https://test-asl-api.onrender.com/evaluate", requestOptions)
-          console.log(response)
-          console.log(response.body)
-        // console.log(response.text().then(v => v));
-      const text = await response.text();
-      // const newFeedbackArray = [...feedback, text];
-      // setFeedback(newFeedbackArray);
-      // console.log(feedback)
-      // console.log(frames)
-      // console.log([...feedback, text])
-      return [data, text];
-    } catch (e) {
-      console.error(e);
+  async function takeScreenshot(frameNumber) {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !currentSign) {
+      throw new Error('The camera and sign selection must be ready before recording.');
     }
-    return [];
+
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+    const text = await evaluateFrame({
+      signName: currentSign.signName,
+      frameNumber,
+      imageBase64,
+    });
+    return { imageBase64, text };
   }
-  
 
-    useEffect(() => {
-        console.log(videoRef)
-        if (videoRef.current) {
-            videoRef.current.srcObject = camStream;
-        }
-    }, [hasPermission])
-  
-  
-  useEffect(() => {
-      console.log(frames)
-      console.log(feedback)
-    }, [frames, feedback])
+  const resetResults = useCallback(() => {
+    setFrames([]);
+    setFeedback([]);
+    setActivityError('');
+  }, []);
 
-  // Handle video loaded event
-  const handleVideoLoaded = () => {
-    console.log("Video element loaded and playing");
-    setIsVideoLoaded(true);
-  };
-
+  const handleSignChange = useCallback((sign) => {
+    setCurrentSign(sign);
+    resetResults();
+  }, [resetResults]);
 
   return (
-    <div>
-      <div >
-        <h1>Personalized ASL Feedback</h1>
-        
-      <div className='buttons-container'>
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          {hasPermission === null ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600">Requesting camera permission...</p>
-            </div>
-          ) : hasPermission === false ? (
-            <div className="text-center py-8 text-red-500">
-              <p className="font-bold">Camera access denied</p>
-              <p className="mt-2">{error || "Please allow camera access to use this app."}</p>
-            </div>
-          ) : (<>
-            <div className="webcam-container" style= {{ position: "relative"}}>
-                <canvas
-                  ref={canvasRef}
-                  // className="w-full rounded-md bg-black"
-                  width={320}
-                  height={240}
-                  style={{ display: "none" }}
-                  />
-                  <video 
-                    ref={videoRef} 
-                    autoPlay 
-                    playsInline
-                    onCanPlay={handleVideoLoaded}
-                    className="w-full rounded-md bg-black"
-                    style={{ height: '480px' }}
-                    />
-              {!isVideoLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white">
-                  Loading camera feed...
-                </div>
-              )}
+    <section className="practice">
+      <h1>Personalized ASL feedback</h1>
 
-              {countDownText && countDownText.length > 0 &&
-                <div className="countdown-overlay"
-                  style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      background: "rgba(0, 0, 0, 0.6)",
-                      color: "white",
-                      padding: "10px 20px",
-                      borderRadius: "8px",
-                      fontSize: "24px",
-                      fontWeight: "bold",
-                      zIndex: 10,
-                      display: "flex",
-                      gap: "10px"
-                    }}
-                    >
-                    {countDownText}
-                </div>
-              }
-            </div>
+      <div className="practice__camera">
+        <canvas ref={canvasRef} hidden />
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          onCanPlay={() => setIsVideoLoaded(true)}
+          aria-label="Live camera preview"
+        />
 
-        </>)}
-        </div>
-        
-        <div className="">
-          {/* <p className="text-sm text-gray-500">
-            Camera status: {hasPermission === null ? 'Requesting access' : hasPermission ? 'Connected' : 'Denied'}
-          </p> */}
-          {error && <p className="text-sm text-red-500 mt-1">Error: {error}</p>}
-        </div>
-
-        {/* <button
-          onClick={(e) => {
-            e.preventDefault()
-            takeScreenshot()
-          }}
-        >
-          Take screenshot
-        </button> */}
-        {isVideoLoaded && <>
-          <div className='right-align'>
-            <SelectSign
-              setCurrentSign={setCurrentSign}
-            />
-
-            <ButtonScreenshot
-              currentSign={currentSign}
-              takeScreenshot={() => takeScreenshot()}
-              setCountDownText={setCountDownText}
-              frames={frames}
-              setFrames={setFrames}
-              setFeedback={setFeedback}
-              id = 'animateButton'
-            />
-            
-            </div>
-            </>}
-        </div>
-        
-        <div className='flex-container'>
-          {frames && frames.length > 0 &&
-            <Feedback
-              frames={frames}
-              feedback={feedback}
-            />
-          }
+        {cameraStatus === 'requesting' && (
+          <div className="camera-message">Requesting camera permission…</div>
+        )}
+        {cameraStatus === 'denied' && (
+          <div className="camera-message camera-message--error">
+            <strong>Camera unavailable</strong>
+            <span>{cameraError}</span>
           </div>
-
-
-        {/* <img
-          ref={photoRef}
-          // style={{ height: "1280px", width: "7"}}
-        /> */}
+        )}
+        {cameraStatus === 'ready' && !isVideoLoaded && (
+          <div className="camera-message">Loading camera feed…</div>
+        )}
+        {countdownText && (
+          <div className="countdown-overlay" role="status" aria-live="polite">
+            {countdownText}
+          </div>
+        )}
       </div>
-      
-    </div>
-    
+
+      {isVideoLoaded && (
+        <div className="practice__controls">
+          <SelectSign
+            currentSign={currentSign}
+            onChange={handleSignChange}
+            disabled={isRecording}
+          />
+          <ButtonScreenshot
+            currentSign={currentSign}
+            takeScreenshot={takeScreenshot}
+            setCountdownText={setCountdownText}
+            onComplete={({ capturedFrames, capturedFeedback }) => {
+              setFrames(capturedFrames);
+              setFeedback(capturedFeedback);
+            }}
+            onError={(error) => setActivityError(error.message)}
+            onStart={resetResults}
+            onRecordingChange={setIsRecording}
+          />
+        </div>
+      )}
+
+      {activityError && <p className="error-message" role="alert">{activityError}</p>}
+      {frames.length > 0 && <Feedback frames={frames} feedback={feedback} />}
+    </section>
   );
 }

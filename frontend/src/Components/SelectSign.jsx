@@ -1,57 +1,50 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import '../styles/dropdown.css'
+import { useEffect, useState } from 'react';
+import { getSigns } from '../api';
+import '../styles/dropdown.css';
 
-function SelectSign({ setCurrentSign }) {
-  const [options, setOptions] = useState();
-
-  const handleSelectChange = (e) => {
-    const selectedOption = e.target.value;
-  // tell ButtonScreenshot which sign it is so it knows how many screenshots to take
-    const entryCount = e.target.value.split("|")[0];
-    const signName = e.target.value.split("|")[1];
-    console.log(options)
-    setCurrentSign({
-      entryCount: entryCount,
-      signName: signName
-    })
-  } 
-    
-
-  async function findSignList() {
-    const requestOptions = {
-      method: "GET",
-      redirect: "follow"
-    };
-    
-    try {
-      const response = await fetch("https://test-asl-api.onrender.com/signs", requestOptions);
-      const text = await response.text();
-      const json = await JSON.parse(text);
-      setOptions(json.signs);
-    } catch (e) {
-      console.error(e)
-    }
-    return null;
-  }
-  
-  const menuOptions = useMemo(() => findSignList(), [])
+export default function SelectSign({ currentSign, onChange, disabled = false }) {
+  const [options, setOptions] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!options) return
+    let cancelled = false;
 
-    setCurrentSign({
-      entryCount: options[0].entryCount,
-      signName: options[0].signName
-    })
-  }, [options])
+    getSigns()
+      .then((signs) => {
+        if (cancelled) return;
+        setOptions(signs);
+        if (signs.length > 0) onChange(signs[0]);
+      })
+      .catch((requestError) => {
+        if (!cancelled) setError(requestError.message);
+      });
 
-  return (<>
-    <select name="Signs" className="dropdown" onChange={handleSelectChange}>
-        {options && options.map((v, i) => <>
-          <option value={`${v.entryCount}|${v.signName}`}>{v.signName}</option>
-        </>)}
-    </select> 
-  </>)
+    return () => {
+      cancelled = true;
+    };
+  }, [onChange]);
+
+  function handleChange(event) {
+    const selectedSign = options.find((option) => option.signName === event.target.value);
+    if (selectedSign) onChange(selectedSign);
+  }
+
+  if (error) return <span className="control-error" role="alert">Could not load signs: {error}</span>;
+
+  return (
+    <label className="sign-picker">
+      <span>Practice sign</span>
+      <select
+        className="dropdown"
+        value={currentSign?.signName || ''}
+        onChange={handleChange}
+        disabled={disabled || options.length === 0}
+      >
+        {options.length === 0 && <option value="">Loading…</option>}
+        {options.map((option) => (
+          <option key={option.signName} value={option.signName}>{option.signName}</option>
+        ))}
+      </select>
+    </label>
+  );
 }
-
-export default SelectSign;

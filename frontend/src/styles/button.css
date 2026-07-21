@@ -1,18 +1,28 @@
-.button {
+.button,
+.hide-hints {
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.85rem;
   background: #bd6bc8;
   color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 0.3rem 0.5rem;
-  font-size: 1.2rem;
-  display: inline-flex;
-  background-position: right 10px top;
-  margin-left: 1rem;
-  margin-top: 0rem;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(.4,2,.6,1);
 }
 
-.button.clicked {
-  transform: scale(0.9);
+.button:hover:not(:disabled),
+.hide-hints:hover {
+  background: #cf7bd9;
+}
+
+.button:focus-visible,
+.hide-hints:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 3px;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }

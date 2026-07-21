@@ -1,30 +1,35 @@
-import React, { useState } from 'react'
+import { useState } from 'react';
 
-function HintButton({ text, video }) {
-  const [showHints, setShowHints] = useState(false)
-  return (<>
-    <button
-      onClick={() => setShowHints(v => !v)}
-      className='hide-hints'
-    >
-      {showHints ? "Hide Hints" : "Show Hints"}  
-    </button>
+export default function HintButton({ text, video, signName }) {
+  const [showHints, setShowHints] = useState(false);
+  const isGoogleDriveVideo = video.includes('drive.google.com');
 
-    {showHints && <>
-      <p className='frame-text'>
-        Hint: {text}
-      </p>
-      <p className='frame-title'>
-        Video Demonstration:
-      </p>
-      <iframe
-        src={video + "/preview"}
-        width={640}
-        height={360}
-        allow="autoplay"
-      />
-    </>}
-  </>)
+  return (
+    <section className="hints">
+      <button
+        type="button"
+        onClick={() => setShowHints((visible) => !visible)}
+        className="hide-hints"
+        aria-expanded={showHints}
+      >
+        {showHints ? 'Hide reference' : 'Show reference'}
+      </button>
+
+      {showHints && (
+        <div className="hints__content">
+          <h3>How to sign {signName}</h3>
+          <p>{text}</p>
+          {isGoogleDriveVideo ? (
+            <iframe
+              src={`${video}/preview`}
+              title={`${signName} video demonstration`}
+              allow="autoplay"
+            />
+          ) : (
+            <video controls src={video} aria-label={`${signName} video demonstration`} />
+          )}
+        </div>
+      )}
+    </section>
+  );
 }
-
-export default HintButton

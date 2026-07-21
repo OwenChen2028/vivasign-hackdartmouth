@@ -1,20 +1,13 @@
-import React from 'react'
-import { Link } from 'react-router'
-import '../styles/navbar.css'
+import { Link } from 'react-router';
+import '../styles/navbar.css';
 
 function Navbar() {
-  return (<>
-    <nav className='navbar'>
-      <Link to='/' className='logo'> 
-        VivaSign
-      </Link>
-      <span className='right-align-navbar'>
-        <Link to='/webcam' className='link'>
-          Learn
-        </Link>
-      </span>
+  return (
+    <nav className="navbar" aria-label="Primary navigation">
+      <Link to="/" className="logo">VivaSign</Link>
+      <Link to="/webcam" className="link">Practice</Link>
     </nav>
-  </>)
+  );
 }
 
-export default Navbar
+export default Navbar;

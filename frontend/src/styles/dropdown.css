@@ -1,10 +1,21 @@
+.sign-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+}
+
 .dropdown {
-  background: #bd6bc8;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  background: #8d3e99;
   color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 0.3rem 0.5rem;
-  font-size: 1.2rem;
-  display: inline-flex;
-  background-position: right 10px top;
+  font: inherit;
+  font-size: 1.05rem;
+}
+
+.control-error {
+  max-width: 30rem;
+  color: #ffb8b8;
 }

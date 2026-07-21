@@ -1,64 +1,43 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import { useEffect, useState } from 'react';
+import { getHints } from '../api';
 import HintButton from './HintButton';
 
-async function fetchHints(signName) {
-  console.log("swdfiofgui")
-  const requestOptions = {
-    method: "GET",
-    redirect: "follow"
-  };
-  
-  const videoResponse = await fetch(`https://test-asl-api.onrender.com/video?signName=${signName}`, requestOptions)
-  const textResponse = await fetch(`https://test-asl-api.onrender.com/explain?signName=${signName}`, requestOptions)
-
-  const videoURL = await videoResponse.text()
-  const hintText = await textResponse.text()
-
-  console.log(videoResponse)
-  console.log(textResponse)
-
-  return {
-    text: hintText,
-    video: videoURL
-  }
-}
-
-function Feedback({ frames, feedback }) {
-  const [hint, setHint] = useState({
-    text: "",
-    video: ""
-  })
-
-  const _response = useMemo(async () => {
-    console.log(feedback)
-    const res = await fetchHints(feedback[0].signName)
-    setHint(res)
-  }, [])
+export default function Feedback({ frames, feedback }) {
+  const [hint, setHint] = useState(null);
+  const [hintError, setHintError] = useState('');
+  const signName = feedback[0]?.signName;
 
   useEffect(() => {
-    console.log(hint)
-  }, [hint])
-  
-  return (<>
-      
-    {frames && frames.length > 0 && frames.map((_, i) => <>
-      <p className='frame-title'>
-        Frame {i + 1}:
-      </p>
-      
-      <img
-        src={frames[i] ?? "Loading..."}
-      />
+    let cancelled = false;
+    if (!signName) return undefined;
 
-      <p className='frame-text'>
-        {feedback[i].text ?? "Loading..."}
-      </p>
-    </>)}
-      <HintButton
-        text={hint.text}
-        video={hint.video}
-      />
-  </>)
+    setHint(null);
+    setHintError('');
+    getHints(signName)
+      .then((result) => {
+        if (!cancelled) setHint(result);
+      })
+      .catch((error) => {
+        if (!cancelled) setHintError(error.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [signName]);
+
+  return (
+    <section className="feedback" aria-labelledby="feedback-heading">
+      <h2 id="feedback-heading">Your feedback</h2>
+      {frames.map((frame, index) => (
+        <article className="feedback__frame" key={`${signName}-${index}`}>
+          <h3>Frame {index + 1}</h3>
+          <img src={frame} alt={`Your captured ${signName} frame ${index + 1}`} />
+          <p>{feedback[index]?.text || 'Feedback unavailable.'}</p>
+        </article>
+      ))}
+      {hintError && <p className="error-message">Could not load the reference: {hintError}</p>}
+      {hint && <HintButton text={hint.text} video={hint.video} signName={signName} />}
+    </section>
+  );
 }
-
-export default Feedback

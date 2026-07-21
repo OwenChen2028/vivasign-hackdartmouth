@@ -1,35 +1,27 @@
 .navbar {
-  background-color: #bd6bc8;
-  margin: 0;
-  padding: 0;
-  display: inline-flex;
-  width: 100%;
-  padding-bottom: 0.75rem;
-  padding-top: 0.5rem;
-  padding-left: 0rem;
-  padding-right: 0rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   box-sizing: border-box;
+  width: 100%;
+  padding: 0.75rem clamp(1rem, 5vw, 2.5rem);
+  background: #a94fb7;
+}
+
+.logo,
+.link {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .logo {
-  font-size: x-large;
+  font-size: 1.5rem;
   font-weight: 800;
-  text-align: left;
-  text-decoration: none;
-  padding-left: 2.5rem;
 }
 
-.right-align-navbar {
-  /* right: 2.5rem; */
-  margin-right: 2.5rem;
-  margin-left: auto;
-  justify-items: right;
-  width: min-content;
-}
-
-.link {
-  font-size: x-large;
-  margin-left: auto;
-  margin-top: auto;
-  width: max-content;
+.logo:visited,
+.link:visited {
+  color: white;
 }

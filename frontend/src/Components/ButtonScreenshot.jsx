@@ -1,85 +1,89 @@
-import React, { useState } from 'react';
-import '../styles/button.css'
+import { useEffect, useRef, useState } from 'react';
+import '../styles/button.css';
 
-const DelayedAction = ({takeScreenshot, currentSign, setCountDownText, frames, setFrames, setFeedback}) => {
-  // const [actionStatus, setActionStatus] = useState('Idle');
-  const [timerText, setTimerText] = useState();
-  const [loading, setLoading] = useState(false);
-  
-  function startRecording() {
-    const delay = 4; // # of seconds between captures
-    setFrames([])
-    const newFramesArray = []
-    const newFeedbackArray = []
-    setLoading(true);
+const COUNTDOWN_SECONDS = 3;
 
-    for (let i = 0; i < currentSign.entryCount; i++) {
-      setTimeout(async () => {
-        const [frame, text] = await takeScreenshot();
-        newFramesArray.push(frame);
-        newFeedbackArray.push({
-          text,
-          signName: currentSign.signName
-        });
-        console.log(newFeedbackArray)
-        console.log(newFramesArray)
-        console.log("screenshot taken")
-        if (newFeedbackArray.length === Number.parseInt(currentSign.entryCount) && newFramesArray.length === Number.parseInt(currentSign.entryCount)) {
-          setFrames(newFramesArray);
-          setFeedback(newFeedbackArray);
-          setLoading(false);
-          setCountDownText('')
+function wait(milliseconds, timers) {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => {
+      timers.current.delete(timer);
+      resolve();
+    }, milliseconds);
+    timers.current.add(timer);
+  });
+}
+
+export default function ButtonScreenshot({
+  currentSign,
+  takeScreenshot,
+  setCountdownText,
+  onComplete,
+  onError,
+  onStart,
+  onRecordingChange,
+}) {
+  const [isRecording, setIsRecording] = useState(false);
+  const timers = useRef(new Set());
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    const activeTimers = timers.current;
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      activeTimers.forEach(window.clearTimeout);
+      activeTimers.clear();
+    };
+  }, []);
+
+  async function startRecording() {
+    if (!currentSign || isRecording) return;
+
+    setIsRecording(true);
+    onRecordingChange(true);
+    onStart();
+    const capturedFrames = [];
+    const capturedFeedback = [];
+
+    try {
+      for (let frameNumber = 1; frameNumber <= currentSign.entryCount; frameNumber += 1) {
+        for (let count = COUNTDOWN_SECONDS; count > 0; count -= 1) {
+          setCountdownText(`Frame ${frameNumber} of ${currentSign.entryCount}: ${count}`);
+          await wait(1000, timers);
+          if (!mounted.current) return;
         }
-      }, delay * 1000 * (i + 1))
-      
-      for (let j = 0; j < delay; j++) {
-        setTimeout(() => {
-          if (j === 0) {
-            setCountDownText(`Picture Taken! (${i + 1}/${currentSign.entryCount})`)
-            if ((i + 1) === Number.parseInt(currentSign.entryCount)) {
-              setTimeout(() => {
-                setCountDownText('All pictures taken, loading feedback...')
-              }, 1000)
-            }
-          } else {
-            setCountDownText(j.toString());
-          }
-        }, (delay - j) * 1000 + (i * delay * 1000));
+
+        setCountdownText(`Capturing frame ${frameNumber}…`);
+        const result = await takeScreenshot(frameNumber);
+        capturedFrames.push(result.imageBase64);
+        capturedFeedback.push({ text: result.text, signName: currentSign.signName });
       }
 
-      // setTimeout(() => {
-      //   setFrames(newFramesArray);
-      //   setFeedback(newFeedbackArray);
-      // }, [delay * (currentSign.entryCount + 2) * 1000])
+      if (mounted.current) {
+        setCountdownText('');
+        onComplete({ capturedFrames, capturedFeedback });
+      }
+    } catch (error) {
+      if (mounted.current) {
+        setCountdownText('');
+        onError(error);
+      }
+    } finally {
+      if (mounted.current) {
+        setIsRecording(false);
+        onRecordingChange(false);
+      }
     }
   }
 
-  const handleButtonClick = () => {
-    setCountDownText('Action in progress...');
-
-    
-    
-    // Use setTimeout to delay the action
-    setTimeout(() => {
-      setCountDownText('Action completed!');
-      // Your actual action code here
-    }, 3000); // 3 second delay
-  };
-
-  return (<>
-    {/* <p>Status: {actionStatus}</p> */}
+  return (
     <button
-      onClick={() => {
-        if (!loading)
-          startRecording()
-      }}
-      className='button'
+      type="button"
+      onClick={startRecording}
+      className="button"
+      disabled={!currentSign || isRecording}
     >
-      Start Countdown
+      {isRecording ? 'Recording…' : 'Start countdown'}
     </button>
-
-    <p>{ timerText }</p>
-  </>)
-};
-
-export default DelayedAction
+  );
+}

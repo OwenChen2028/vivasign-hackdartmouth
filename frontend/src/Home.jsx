@@ -1,38 +1,31 @@
-import React from 'react'
-import { Link } from 'react-router'
-import './styles/home.css'
-import './styles/button.css'
+import { Link } from 'react-router';
+import './styles/home.css';
 
 function Home() {
-  return (<>
-    <h1>
-      VivaSign — Your personal ASL tutor
-    </h1>
-
-    <h3>
-      Learn ASL with a practical, hands on approach.
-      <br />
-      VivaSign teaches by analyzing your ASL signage and giving you personalized feedback.
-    </h3>
-
-    <div>
-      <h3>
-        How to Use: 
-      </h3>
-
-      <p>
-        Pick the sign you want to practice and click "Start Recording". A timer will count down for each key part of the sign, taking 1-3 screenshots based on the complexity of your sign. 
+  return (
+    <section className="home">
+      <h1>Practice ASL with guided feedback</h1>
+      <p className="home__intro">
+        VivaSign turns each sign into a short, hands-on practice session with guided
+        keyframes, focused feedback, and a video demonstration.
       </p>
-      <p> Perform each part to the best of your ability, focusing on hand shape, movement, and facial expression. Make sure you are in the correct position by the time each countdown finishes. 
-      </p>
-      <p>
-      Once all parts are done, you'll receive personalized feedback based on your performance. 
-      </p>
-    </div>
-    <Link className='begin-button' to='/webcam'>
-      Begin
-    </Link>
-  </>)
+
+      <div className="home__instructions">
+        <h2>How a practice session works</h2>
+        <p>
+          Pick the sign you want to practice and start the countdown. VivaSign takes
+          one to three keyframe pictures, depending on the sign.
+        </p>
+        <p>
+          Match each position as clearly as possible, focusing on handshape, movement,
+          palm orientation, and facial expression.
+        </p>
+        <p>After the last picture, you’ll receive feedback and a reference demonstration.</p>
+      </div>
+
+      <Link className="begin-button" to="/webcam">Begin practicing</Link>
+    </section>
+  );
 }
 
-export default Home
+export default Home;
