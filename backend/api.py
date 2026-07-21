@@ -9,7 +9,11 @@ from werkzeug.exceptions import HTTPException
 from catalog import SIGN_EXAMPLES_DIRECTORY
 from settings import Settings
 from repositories import PostgresSignRepository, ReferenceSignRepository
-from services import GeminiEvaluationService, ReferenceEvaluationService
+from services import (
+    GeminiEvaluationService,
+    ReferenceEvaluationService,
+    build_instruction,
+)
 
 
 DATA_URL_PATTERN = re.compile(r"^data:(image/(?:png|jpeg));base64,(.+)$", re.DOTALL)
@@ -85,11 +89,7 @@ def create_app(settings=None):
         frames = repository.get_frames(sign_name)
         if not frames:
             return _error(f"No data found for sign '{sign_name}'.", 404)
-        try:
-            return evaluation_service.explain(sign_name, frames)
-        except Exception as error:
-            app.logger.exception("Instruction generation failed: %s", error)
-            return _error("Instruction generation failed.", 502)
+        return build_instruction(sign_name, frames)
 
     @app.get("/video")
     def get_video():

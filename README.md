@@ -40,7 +40,9 @@ VivaSign supports two evaluation modes:
   verifies the complete capture and feedback workflow, but does not visually score
   captured images.
 - **AI evaluation mode** compares captured frames with sign reference data using
-  Google Gemini. This mode requires Gemini and PostgreSQL configuration.
+  Google Gemini. This mode requires Gemini and PostgreSQL configuration. Written
+  instructions come directly from PostgreSQL; Gemini is called only for captured-frame
+  feedback.
 
 ## Technology
 

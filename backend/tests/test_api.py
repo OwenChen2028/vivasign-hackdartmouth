@@ -1,8 +1,9 @@
 import base64
 import unittest
+from unittest.mock import patch
 
 from api import create_app
-from settings import REFERENCE_MODE, Settings
+from settings import AI_MODE, REFERENCE_MODE, Settings
 
 
 REFERENCE_SETTINGS = Settings(
@@ -12,6 +13,12 @@ REFERENCE_SETTINGS = Settings(
     database={},
 )
 TEST_IMAGE = "data:image/png;base64," + base64.b64encode(b"test image").decode()
+TEST_FRAME = {
+    "handshape": "Keep both index fingers pointing upward.",
+    "location": "Bring your hands together in front of your chest.",
+    "orientation": "Keep your palms facing each other.",
+    "nms": "Use a neutral expression.",
+}
 
 
 class ReferenceApiTest(unittest.TestCase):
@@ -58,6 +65,30 @@ class ReferenceApiTest(unittest.TestCase):
     def test_unknown_route_is_a_404(self):
         response = self.client.get("/not-a-route")
         self.assertEqual(response.status_code, 404)
+
+
+class AiInstructionApiTest(unittest.TestCase):
+    @patch("api.GeminiEvaluationService")
+    @patch("api.PostgresSignRepository")
+    def test_instructions_use_database_rows_without_calling_gemini(
+        self, repository_class, evaluation_service_class
+    ):
+        repository_class.return_value.get_frames.return_value = [TEST_FRAME]
+        settings = Settings(
+            evaluation_mode=AI_MODE,
+            gemini_api_key="test-key",
+            gemini_model="gemini-3.6-flash",
+            database={"host": "database"},
+        )
+        app = create_app(settings)
+        app.config.update(TESTING=True)
+
+        response = app.test_client().get("/explain?signName=Meet")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Step 1", response.get_data(as_text=True))
+        repository_class.return_value.get_frames.assert_called_once_with("Meet")
+        evaluation_service_class.return_value.explain.assert_not_called()
 
 
 if __name__ == "__main__":

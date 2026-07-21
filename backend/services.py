@@ -20,9 +20,6 @@ class ReferenceEvaluationService:
     def evaluate(self, sign_name, frame_number, frame, _image_data, _mime_type):
         return f"Frame {frame_number} of {sign_name} captured."
 
-    def explain(self, sign_name, frames):
-        return build_instruction(sign_name, frames)
-
 
 class GeminiEvaluationService:
     def __init__(self, api_key, model, client=None):
@@ -59,15 +56,6 @@ class GeminiEvaluationService:
                     os.unlink(temporary_path)
                 except FileNotFoundError:
                     logger.debug("Temporary evaluation image was already removed.")
-
-    def explain(self, sign_name, frames):
-        prompt = (
-            "Rewrite these ASL reference steps as concise, beginner-friendly instructions. "
-            "Address the learner directly, preserve every step, and do not add an introduction.\n\n"
-            f"Sign: {sign_name}\n{build_instruction(sign_name, frames)}"
-        )
-        response = self.client.models.generate_content(model=self.model, contents=[prompt])
-        return response.text
 
     @staticmethod
     def _evaluation_prompt(sign_name, frame_number, frame):
