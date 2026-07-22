@@ -12,6 +12,7 @@ export default function SignReference({
   const [error, setError] = useState('');
   const [requestVersion, setRequestVersion] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [videoStatus, setVideoStatus] = useState('loading');
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function SignReference({
     setReference(null);
     setError('');
     setIsPlaying(false);
+    setVideoStatus('loading');
     getReference(signName)
       .then((result) => {
         if (!cancelled) setReference({ ...result, signName });
@@ -42,6 +44,7 @@ export default function SignReference({
     if (isExpanded) {
       videoRef.current?.pause();
       setIsPlaying(false);
+      setVideoStatus('loading');
     }
     onExpandedChange(!isExpanded);
   }
@@ -49,7 +52,8 @@ export default function SignReference({
   function playVideo() {
     const playback = videoRef.current?.play();
     playback?.catch(() => {
-      setError('The demonstration video could not be played.');
+      setIsPlaying(false);
+      setVideoStatus('error');
     });
   }
 
@@ -70,6 +74,7 @@ export default function SignReference({
 
   const activeReference = reference?.signName === signName ? reference : null;
   const isLoading = Boolean(signName) && !activeReference && !error;
+  const isVideoVisible = videoStatus === 'ready' || videoStatus === 'buffering';
   let buttonLabel = 'View example';
   if (isLoading) buttonLabel = 'Loading reference…';
   if (error) buttonLabel = 'Retry reference';
@@ -95,21 +100,56 @@ export default function SignReference({
       {isExpanded && activeReference && (
         <div className="reference__content">
           <h2>{signName} demonstration</h2>
-          <video
-            ref={videoRef}
-            src={activeReference.video}
-            playsInline
-            preload="metadata"
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => setIsPlaying(false)}
-            aria-label={`${signName} video demonstration`}
-          />
+          <div className={`reference__video-stage${isVideoVisible ? ' reference__video-stage--ready' : ''}`}>
+            <video
+              ref={videoRef}
+              src={activeReference.video}
+              playsInline
+              preload="auto"
+              onLoadStart={() => setVideoStatus('loading')}
+              onLoadedData={() => setVideoStatus('ready')}
+              onCanPlay={() => setVideoStatus('ready')}
+              onPlay={() => setIsPlaying(true)}
+              onPlaying={() => setVideoStatus('ready')}
+              onWaiting={() => setVideoStatus('buffering')}
+              onPause={() => setIsPlaying(false)}
+              onEnded={() => setIsPlaying(false)}
+              onError={() => {
+                setIsPlaying(false);
+                setVideoStatus('error');
+              }}
+              aria-label={`${signName} video demonstration`}
+            />
+            {videoStatus === 'loading' && (
+              <div className="reference__video-loading" role="status">
+                <span className="reference__spinner" aria-hidden="true" />
+                <span>Loading demonstration…</span>
+              </div>
+            )}
+            {videoStatus === 'error' && (
+              <p className="reference__video-error" role="alert">
+                The demonstration video could not be loaded.
+              </p>
+            )}
+          </div>
+          {videoStatus === 'buffering' && (
+            <p className="reference__buffering" role="status">Buffering demonstration…</p>
+          )}
           <div className="reference__video-controls" aria-label="Video controls">
-            <button type="button" className="button" onClick={togglePlayback}>
+            <button
+              type="button"
+              className="button"
+              onClick={togglePlayback}
+              disabled={!isVideoVisible}
+            >
               {isPlaying ? 'Pause demonstration' : 'Play demonstration'}
             </button>
-            <button type="button" className="button" onClick={restartVideo}>
+            <button
+              type="button"
+              className="button"
+              onClick={restartVideo}
+              disabled={!isVideoVisible}
+            >
               Restart demonstration
             </button>
           </div>
