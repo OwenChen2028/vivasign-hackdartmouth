@@ -64,7 +64,13 @@ Do not preface your response. First verify that the image plausibly shows a pers
 sign language. If it does not show hands, say that it is unsuitable for feedback and stop.
 Otherwise, address the learner directly in one paragraph. Evaluate only keyframe {frame_number}
 of the ASL sign '{sign_name}', naturally discussing handshape, location, palm orientation, and
-non-manual signals. Finish by saying how recognizable this frame is.
+non-manual signals. Apply a balanced standard and check each reference category. Say that the
+frame looks correct only when all clearly visible required features substantially align; do not
+call it correct merely because the overall sign is recognizable. Report every clear mismatch in
+handshape, location, palm orientation, or non-manual signals, even when the overall sign remains
+recognizable. Accept natural variation when it does not change a required feature, and do not
+invent issues or speculate about details that are hidden, blurred, or ambiguous. Finish by
+saying how recognizable this frame is.
 
 Reference:
 Handshape: {frame['handshape']}

@@ -136,7 +136,7 @@ The frontend reads `REACT_APP_API_BASE_URL` from `frontend/.env`. It defaults to
 | `POST` | `/evaluate` | Evaluates one captured keyframe |
 | `GET` | `/explain` | Formats written guidance directly from stored sign data |
 | `GET` | `/video` | Returns the demonstration video URL for a sign |
-| `GET` | `/media/<filename>` | Serves bundled videos in reference mode |
+| `GET` | `/media/<filename>` | Serves bundled demonstration videos |
 
 ## Verification
 

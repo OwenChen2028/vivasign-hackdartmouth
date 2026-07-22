@@ -172,10 +172,20 @@
   margin: 0 0 1rem;
 }
 
-.reference iframe,
 .reference video {
-  aspect-ratio: 16 / 9;
+  height: auto;
+  margin-bottom: 0.75rem;
+}
+
+.reference__video-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
   margin-bottom: 1.5rem;
+}
+
+.reference__video-controls .button {
+  width: 100%;
 }
 
 .reference__instructions h3 {
@@ -195,6 +205,10 @@
   .feedback__notice {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .reference__video-controls {
+    grid-template-columns: 1fr;
   }
 }
 

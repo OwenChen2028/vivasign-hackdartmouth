@@ -74,6 +74,7 @@ class AiInstructionApiTest(unittest.TestCase):
         self, repository_class, evaluation_service_class
     ):
         repository_class.return_value.get_frames.return_value = [TEST_FRAME]
+        repository_class.return_value.get_video.return_value = "MEET.mp4"
         settings = Settings(
             evaluation_mode=AI_MODE,
             gemini_api_key="test-key",
@@ -84,9 +85,14 @@ class AiInstructionApiTest(unittest.TestCase):
         app.config.update(TESTING=True)
 
         response = app.test_client().get("/explain?signName=Meet")
+        video = app.test_client().get("/video?signName=Meet")
+        media = app.test_client().get("/media/MEET.mp4")
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("Step 1", response.get_data(as_text=True))
+        self.assertIn("/media/MEET.mp4", video.get_data(as_text=True))
+        self.assertEqual(media.status_code, 200)
+        media.close()
         repository_class.return_value.get_frames.assert_called_once_with("Meet")
         evaluation_service_class.return_value.explain.assert_not_called()
 

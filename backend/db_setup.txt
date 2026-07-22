@@ -50,10 +50,10 @@ CREATE TABLE sign_videos (
 
 -- Videos
 INSERT INTO sign_videos (signName, videoUrl) VALUES 
-('Hello', 'https://drive.google.com/file/d/1cK4TDYARTevyEIq-48aqOw047RiuEu0s'),
-('Meet', 'https://drive.google.com/file/d/1HXMdEEVNtY5OMCDjWVRRM7NOrdsHM4-D'),
-('My', 'https://drive.google.com/file/d/1L5qxE4PrWTzpjXWtVWQkOHxKl_Us6J8d'),
-('Name', 'https://drive.google.com/file/d/1qOgYFtWnKmoZRVj4YNNKTZTbLTPfBzyQ'),
-('Nice', 'https://drive.google.com/file/d/1gPC2NfeQZTfPIkKuedf7JEeU8S6Ute2d'),
-('Why', 'https://drive.google.com/file/d/1_Z0bZlIv8PQpMLqjGpWfag6A0O7EQrlw'),
-('You', 'https://drive.google.com/file/d/1YNOT9d8C-gTooOkPYoCCzj7WL1BhZnW2');
+('Hello', 'HI.mp4'),
+('Meet', 'MEET.mp4'),
+('My', 'MY.mp4'),
+('Name', 'NAME.mp4'),
+('Nice', 'NICE.mp4'),
+('Why', 'WHY.mp4'),
+('You', 'YOU.mp4');

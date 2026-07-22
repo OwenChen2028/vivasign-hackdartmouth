@@ -29,5 +29,8 @@ test('shows a selected sign reference before practice', async () => {
 
   expect(screen.getByRole('heading', { name: /hello demonstration/i })).toBeInTheDocument();
   expect(screen.getByText(/hold a flat hand/i)).toBeInTheDocument();
+  expect(screen.getByLabelText(/hello video demonstration/i)).not.toHaveAttribute('controls');
+  expect(screen.getByRole('button', { name: /play demonstration/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /restart demonstration/i })).toBeInTheDocument();
   expect(getReference).toHaveBeenCalledWith('Hello');
 });

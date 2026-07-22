@@ -1,6 +1,7 @@
 import base64
 import binascii
 import re
+from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory, url_for
 from flask_cors import CORS
@@ -99,14 +100,13 @@ def create_app(settings=None):
         video = repository.get_video(sign_name)
         if not video:
             return _error(f"No video found for sign '{sign_name}'.", 404)
-        if settings.uses_reference_data:
+        video_path = Path(video)
+        if video_path.name == video and (SIGN_EXAMPLES_DIRECTORY / video).is_file():
             return url_for("get_reference_video", filename=video, _external=True)
         return video
 
     @app.get("/media/<path:filename>")
     def get_reference_video(filename):
-        if not settings.uses_reference_data:
-            return _error("Bundled reference media is disabled.", 404)
         return send_from_directory(SIGN_EXAMPLES_DIRECTORY, filename)
 
     @app.errorhandler(Exception)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getReference } from '../api';
 import FormattedText from './FormattedText';
 
@@ -11,6 +11,8 @@ export default function SignReference({
   const [reference, setReference] = useState(null);
   const [error, setError] = useState('');
   const [requestVersion, setRequestVersion] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -18,6 +20,7 @@ export default function SignReference({
 
     setReference(null);
     setError('');
+    setIsPlaying(false);
     getReference(signName)
       .then((result) => {
         if (!cancelled) setReference({ ...result, signName });
@@ -36,12 +39,37 @@ export default function SignReference({
       setRequestVersion((version) => version + 1);
       return;
     }
+    if (isExpanded) {
+      videoRef.current?.pause();
+      setIsPlaying(false);
+    }
     onExpandedChange(!isExpanded);
+  }
+
+  function playVideo() {
+    const playback = videoRef.current?.play();
+    playback?.catch(() => {
+      setError('The demonstration video could not be played.');
+    });
+  }
+
+  function togglePlayback() {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      playVideo();
+    } else {
+      videoRef.current.pause();
+    }
+  }
+
+  function restartVideo() {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = 0;
+    playVideo();
   }
 
   const activeReference = reference?.signName === signName ? reference : null;
   const isLoading = Boolean(signName) && !activeReference && !error;
-  const isGoogleDriveVideo = activeReference?.video?.includes('drive.google.com');
   let buttonLabel = 'View example';
   if (isLoading) buttonLabel = 'Loading reference…';
   if (error) buttonLabel = 'Retry reference';
@@ -67,19 +95,24 @@ export default function SignReference({
       {isExpanded && activeReference && (
         <div className="reference__content">
           <h2>{signName} demonstration</h2>
-          {isGoogleDriveVideo ? (
-            <iframe
-              src={`${activeReference.video}/preview`}
-              title={`${signName} video demonstration`}
-              allow="autoplay"
-            />
-          ) : (
-            <video
-              controls
-              src={activeReference.video}
-              aria-label={`${signName} video demonstration`}
-            />
-          )}
+          <video
+            ref={videoRef}
+            src={activeReference.video}
+            playsInline
+            preload="metadata"
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={() => setIsPlaying(false)}
+            aria-label={`${signName} video demonstration`}
+          />
+          <div className="reference__video-controls" aria-label="Video controls">
+            <button type="button" className="button" onClick={togglePlayback}>
+              {isPlaying ? 'Pause demonstration' : 'Play demonstration'}
+            </button>
+            <button type="button" className="button" onClick={restartVideo}>
+              Restart demonstration
+            </button>
+          </div>
           <div className="reference__instructions">
             <h3>Instructions</h3>
             <FormattedText text={activeReference.text} className="formatted-text" />

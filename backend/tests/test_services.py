@@ -42,6 +42,16 @@ class GeminiEvaluationServiceTest(unittest.TestCase):
         self.assertEqual(client.files.deleted_name, "uploaded-frame")
         self.assertFalse(os.path.exists(client.files.temporary_path))
 
+    def test_feedback_prompt_uses_a_balanced_standard(self):
+        prompt = GeminiEvaluationService._evaluation_prompt("Hello", 1, FRAME)
+
+        self.assertIn("only when all clearly visible required features", prompt)
+        self.assertIn("Report every clear mismatch", prompt)
+        self.assertIn("even when the overall sign remains", prompt)
+        self.assertIn("Accept natural variation", prompt)
+        self.assertIn("invent issues", prompt)
+        self.assertIn("hidden, blurred, or ambiguous", prompt)
+
 
 if __name__ == "__main__":
     unittest.main()
