@@ -20,33 +20,13 @@ it was recorded.
 
 ## How VivaSign works
 
-1. The learner selects a sign and reviews its PostgreSQL-backed instructions and
-   demonstration video.
-2. VivaSign displays a countdown for each key position in the sign.
-3. The browser captures every keyframe locally without waiting for network requests.
-4. After the final capture, VivaSign submits the frames to Gemini in parallel.
-5. The app presents each captured frame with focused AI feedback.
+1. Select a sign and review its instructions and demonstration video.
+2. Follow the countdown and perform the sign for the camera.
+3. Review the captured key moments alongside tailored feedback from Gemini.
 
-For each captured keyframe, the backend retrieves the expected handshape, location,
-palm orientation, and non-manual signals from PostgreSQL. Those reference fields are
-included with the image in the Gemini request, grounding the generated feedback in the
-selected sign rather than asking the model to evaluate it without context.
-
-VivaSign is intended to run in **AI evaluation mode**. In this mode, PostgreSQL stores
-the sign reference fields and video filenames, while Gemini is called only after a
-practice sequence to evaluate the captured frames.
-
-**Reference mode** is a development fallback for running the interface without
-PostgreSQL or Gemini. It uses bundled reference data, records the requested frames,
-and displays them for comparison, but it does not visually assess the learner's signs.
-
-## Technology
-
-- **Frontend:** React, React Router, and the browser MediaDevices API
-- **Backend:** Python, Flask, and Gunicorn
-- **Retrieval layer:** PostgreSQL for sign reference data and video selection
-- **Multimodal generation:** Google Gemini for image-based feedback grounded by the
-  retrieved reference fields
+The app captures the complete gesture before requesting feedback, so processing does
+not interrupt the signing flow. Reference mode is also available for interface
+development, but it does not assess the captured images.
 
 ## Local development
 
