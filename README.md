@@ -5,28 +5,20 @@ retrieval-augmented generation (RAG) to provide tailored feedback. It retrieves
 sign-specific reference data from PostgreSQL, augments a Google Gemini prompt with
 that context, and compares it with webcam captures of the learner's signing.
 
-## Demo and HackDartmouth X
+## Hackathon origins
 
-VivaSign was created by **Gesture Gurus** for HackDartmouth X.
+VivaSign began as a **Gesture Gurus** project at HackDartmouth X. The video below
+shows the original hackathon prototype; the current application has evolved since
+it was recorded.
 
 [![Watch the VivaSign video demo](https://img.youtube.com/vi/pD90VZ25B0M/maxresdefault.jpg)](https://www.youtube.com/watch?v=pD90VZ25B0M)
 
-- [Watch the video demo](https://www.youtube.com/watch?v=pD90VZ25B0M)
-- [View the Devpost project](https://devpost.com/software/vivasign)
+- [Watch the original hackathon demo](https://www.youtube.com/watch?v=pD90VZ25B0M)
+- [View the HackDartmouth X submission on Devpost](https://devpost.com/software/vivasign)
 
 **Team:** Owen Chen, Axel O’Brien, Jaime Graft, and Joao De Arujo Junior
 
-## Features
-
-- Guided webcam capture with uninterrupted countdowns for each keyframe
-- Gemini feedback on handshape, location, palm orientation, and non-manual signals
-- Practice material for seven common ASL signs
-- Written instructions and video demonstrations available before practice
-- PostgreSQL-backed sign descriptions and video selection
-- Capture-first processing so API latency never interrupts a gesture
-- Responsive, accessible React interface
-
-## How it works
+## How VivaSign works
 
 1. The learner selects a sign and reviews its PostgreSQL-backed instructions and
    demonstration video.
