@@ -7,9 +7,9 @@ that context, and compares it with webcam captures of the learner's signing.
 
 ## Hackathon origins
 
-VivaSign began as a **Gesture Gurus** project at HackDartmouth X. The video below
-shows the original hackathon prototype; the current application has evolved since
-it was recorded.
+VivaSign began as a project at HackDartmouth X.
+The video below shows the original hackathon prototype;
+the current application has evolved since it was recorded.
 
 [![Watch the VivaSign video demo](https://img.youtube.com/vi/pD90VZ25B0M/maxresdefault.jpg)](https://www.youtube.com/watch?v=pD90VZ25B0M)
 
